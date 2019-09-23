@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Week6Daily1FB</string>
+    <string name="facebook_app_id">499584537506888</string>
+    <string name="fb_login_protocol_scheme">fb499584537506888</string>
+</resources>
