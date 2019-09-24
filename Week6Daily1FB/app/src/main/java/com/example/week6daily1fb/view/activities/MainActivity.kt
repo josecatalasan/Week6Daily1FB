@@ -1,4 +1,4 @@
-package com.example.week6daily1fb
+package com.example.week6daily1fb.view.activities
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -10,14 +10,20 @@ import com.facebook.login.LoginManager
 import android.content.Intent
 import android.util.Log
 import android.widget.Toast
+import com.example.week6daily1fb.R
+import com.example.week6daily1fb.model.userprofile.UserProfile
 import com.facebook.AccessToken
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.*
+import java.util.*
 
 class MainActivity : AppCompatActivity() {
 
     lateinit var callbackManager : CallbackManager
     private lateinit var auth : FirebaseAuth
+    lateinit var database : FirebaseDatabase
+    lateinit var reference : DatabaseReference
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -25,6 +31,9 @@ class MainActivity : AppCompatActivity() {
 
         auth = FirebaseAuth.getInstance()
         callbackManager = CallbackManager.Factory.create()
+
+        database = FirebaseDatabase.getInstance()
+        reference = database.reference
 
         LoginManager.getInstance().registerCallback(callbackManager,
             object : FacebookCallback<LoginResult> {
@@ -41,21 +50,13 @@ class MainActivity : AppCompatActivity() {
                 }
             })
 
-        //check if logged in?
-//        val accessToken = AccessToken.getCurrentAccessToken()
-//        val isLoggedIn = accessToken != null && !accessToken.isExpired
-
         LoginManager.getInstance().logInWithReadPermissions(this, listOf("email", "public_profile"))
-
-        //To complete set up, add this OAuth redirect URI to your Facebook app configuration.
-        //https://week6daily1fb.firebaseapp.com/__/auth/handler
     }
 
     override fun onStart() {
         super.onStart()
         // Check if user is signed in (non-null) and update UI accordingly.
-        val currentUser = auth.currentUser
-
+        //val currentUser = auth.currentUser
         //updateUI(currentUser)
     }
 
@@ -71,20 +72,21 @@ class MainActivity : AppCompatActivity() {
         auth.signInWithCredential(credential)
             .addOnCompleteListener(this) { task ->
                 if (task.isSuccessful) {
-                    // Sign in success, update UI with the signed-in user's information
                     Log.d("TAG_HANDLE", "signInWithCredential:success")
                     val user = auth.currentUser
-                    //updateUI(user)
+
+                    val profile = UserProfile(user?.displayName, user?.email/*, user?.phoneNumber, user?.uid!!, user?.photoUrl*/)
+
+                    reference.child(user!!.uid).setValue(profile)
+
+                    val intent = Intent(applicationContext, UsersActivity::class.java)
+                    startActivity(intent)
                 } else {
-                    // If sign in fails, display a message to the user.
                     Log.w("TAG_HANDLE", "signInWithCredential:failure", task.exception)
                     Toast.makeText(baseContext, "Authentication failed.",
                         Toast.LENGTH_SHORT).show()
-                    //updateUI(null)
                 }
-                // do something with user details
-                //auth.currentUser
-
             }
     }
+
 }
